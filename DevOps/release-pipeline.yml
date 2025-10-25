@@ -1,0 +1,59 @@
+trigger: none # Only manual triggers for releases
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+
+stages:
+- stage: Deploy_Development
+  displayName: 'Deploy to Development'
+  jobs:
+  - deployment: Deploy
+    environment: 'development'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: IISWebAppDeploymentOnMachineGroup@0
+            inputs:
+              WebSiteName: 'eTickets-Dev'
+              Package: '$(Pipeline.Workspace)/**/*.zip'
+              SetParametersFile: ''
+
+- stage: Deploy_Staging
+  displayName: 'Deploy to Staging'
+  dependsOn: Deploy_Development
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    environment: 'staging'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: IISWebAppDeploymentOnMachineGroup@0
+            inputs:
+              WebSiteName: 'eTickets-Staging'
+              Package: '$(Pipeline.Workspace)/**/*.zip'
+              SetParametersFile: ''
+
+- stage: Deploy_Production
+  displayName: 'Deploy to Production'
+  dependsOn: Deploy_Staging
+  condition: succeeded()
+  jobs:
+  - deployment: Deploy
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: IISWebAppDeploymentOnMachineGroup@0
+            inputs:
+              WebSiteName: 'eTickets-Prod'
+              Package: '$(Pipeline.Workspace)/**/*.zip'
+              SetParametersFile: ''
