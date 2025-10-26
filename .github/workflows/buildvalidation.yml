@@ -1,0 +1,41 @@
+name: eCommerceApplication/BuildValidation
+on:
+  push:
+    branches:
+    - main
+    - develop
+    - feature/*
+    - bugfix/*
+    - hotfix/*
+env:
+  buildConfiguration: Release
+  buildPlatform: Any CPU
+  solution: "**/*.sln"
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4.1.0
+    - name: Install NuGet
+      uses: nuget/setup-nuget@v1.2.0
+    - name: Restore NuGet packages
+      run: nuget restore ${{ env.solution }}
+    - name: install msbuild
+      uses: microsoft/setup-msbuild@v1.3.1
+    - name: run msbuild
+      run: msbuild ${{ env.solution }} /p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="${{ runner.temp }}" -p:Configuration=${{ env.buildConfiguration }} -p:Platform="${{ env.buildPlatform }}"
+    - name: Run tests
+      uses: microsoft/vstest-action@v1.0.0
+      with:
+        testAssembly: |-
+          **\*test*.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        searchFolder: "${{ github.workspace }}"
+        platform: "${{ env.buildPlatform }}"
+    - name: Publish artifacts
+      uses: actions/upload-artifact@v4.1.0
+      with:
+        name: drop
+        path: "${{ runner.temp }}"
