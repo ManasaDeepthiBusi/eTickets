@@ -7,11 +7,11 @@ on:
     - feature/*
     - bugfix/*
     - hotfix/*
-  workflow_dispatch:  
+  workflow_dispatch:
 env:
   buildConfiguration: Release
   buildPlatform: Any CPU
-  solution: "**/*.sln"
+  solution: "eTickets.sln"
 jobs:
   build:
     runs-on: windows-latest
