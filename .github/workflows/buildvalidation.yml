@@ -7,6 +7,7 @@ on:
     - feature/*
     - bugfix/*
     - hotfix/*
+  workflow_dispatch:  
 env:
   buildConfiguration: Release
   buildPlatform: Any CPU
